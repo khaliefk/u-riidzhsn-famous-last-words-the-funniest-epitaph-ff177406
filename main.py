@@ -1,15 +1,16 @@
 """Famous Last Words: The Funniest Epitaph.
 
-Writes one line to /output/entry.txt: a dying person's last words,
-delivered as three parting messages. The first two are the ones you
-expect. The third is the confession he took to the grave.
+Writes one line to entry.txt: a dying person's last words, delivered
+as three parting messages. The first two are the ones you expect. The
+third is the confession he took to the grave.
 """
 
 import os
 
 ENTRY = "Tell my wife I loved her. Tell my kids I was proud of them. Tell my boss the Wi-Fi was never actually down."
 
-OUTPUT_PATH = "/output/entry.txt"
+OUTPUT_DIR = os.environ.get("OUTPUT_DIR", "/output")
+OUTPUT_PATH = os.path.join(OUTPUT_DIR, "entry.txt")
 MAX_CHARS = 150
 
 
@@ -30,10 +31,8 @@ def validate_entry(text):
 
 def main():
     text = validate_entry(ENTRY)
-    out_dir = os.path.dirname(OUTPUT_PATH)
-    if out_dir:
-        os.makedirs(out_dir, exist_ok=True)
-    with open(OUTPUT_PATH, "w", encoding="utf-8") as handle:
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    with open(OUTPUT_PATH, "w", encoding="utf-8", newline="") as handle:
         handle.write(text)
     with open(OUTPUT_PATH, "r", encoding="utf-8") as handle:
         written = handle.read()
@@ -41,6 +40,9 @@ def main():
         raise ValueError("read-back mismatch: file does not hold the entry")
     if len(written.encode("utf-8")) != len(text.encode("utf-8")):
         raise ValueError("read-back mismatch: file byte length differs")
+    # The file must hold exactly the entry: no trailing newline added.
+    if written.endswith("\n"):
+        raise ValueError("read-back mismatch: file ends with a newline")
     print(text)
     print("%d characters" % len(text))
 
